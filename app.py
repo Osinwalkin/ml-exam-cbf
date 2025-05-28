@@ -123,8 +123,8 @@ user_proxy = autogen.UserProxyAgent(
 print("Starter samtale med vejr-assistenten...")
 
 # Test Scenarier (vælg én ad gangen)
-#user_initial_message = "What is the current weather in Copenhagen?"
-user_initial_message = "What is the weather in New York City?"
+user_initial_message = "What is the current weather in Copenhagen?"
+#user_initial_message = "What is the weather in New York City?"
 #user_initial_message = "How's the weather in NonExistentCityName123?" # Forventer fejl fra API'en
 #user_initial_message = "Weather for." # Forventer at LLM'en spørger om en by, eller at input validering fejler
 
