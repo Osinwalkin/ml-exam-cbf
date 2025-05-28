@@ -1,15 +1,35 @@
-Successful Case (Happy Path):
-Input: "Can you get me the details for todo item number 5?"
-Desired Output: "The todo item with ID 5 has the title "laboriosam mollitia et enim quasi adipisci quia provident illum" and is not completed.\nTERMINATE"
+Use Cases til WeatherAgent
 
-Another Successful Case (Different ID):
-Input: "Fetch todo 1"
-Desired Output: (The corresponding title and completion status for ID 1) + TERMINATE
+Use Case 1: Godkendt weather fetch
+Input/Prompt: user_initial_message = "What is the current weather in Copenhagen?"
+Forventet Output og Rigtig output: "The current weather in Copenhagen, DK is as follows:
 
-API Error Case (e.g., Not Found):
-Input: "I need info on todo 999888"
-Desired Output: Something like (depending on your tool's error formatting and LLM's interpretation): "The tool reported an error: HTTP error: 404 Client Error: Not Found for url: https://jsonplaceholder.typicode.com/todos/999888. Response: {}...\nTERMINATE" (Tailor this to what your agent actually says).
+- Temperature: 15.3°C
+- Description: Broken clouds
 
-Tool Input Validation Error Case:
-Input: "What about todo number 0?" (or "Can you get todo abc?")
-Desired Output: Something like: "The tool reported an error: Invalid todo_id. Must be a positive integer.\nTERMINATE"
+TERMINATE"
+
+Use Case 2: By ikke fundet
+Input/Prompt: user_initial_message = "How's the weather in NonExistentCityName123?"
+Forventet Output: "?"
+Rigtigt Output: "UserProxy (to WeatherAssistant):
+
+exitcode: 0 (execution succeeded)
+Code output:
+Error: API-kald for vejrdata fejlede. Status 404. Detaljer: city not found
+
+
+--------------------------------------------------------------------------------
+WeatherAssistant (to UserProxy):
+
+I'm sorry, but I couldn't find weather information for NonExistentCityName123. Please check the city name and try again. TERMINATE
+
+--------------------------------------------------------------------------------
+
+Samtale afsluttet."
+
+Use Case 3: Uklart bruger input
+Input/Prompt: "user_initial_message = "Weather for.""
+Forventet Output: "?"
+Rigtig Output: "The current weather in Copenhagen, DK is 15.3°C with broken clouds. TERMINATE"
+

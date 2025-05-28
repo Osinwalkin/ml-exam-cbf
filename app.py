@@ -31,6 +31,7 @@ BASE_LLM_CONFIG_MISTRAL = {
             "temperature": 0.3,
             "native_tool_calls": False, 
             "seed": 42,
+            "api_rate_limit": 0.25
         }
     ],
     "cache_seed": None,
@@ -123,13 +124,12 @@ print("Starter samtale med vejr-assistenten...")
 
 # Test Scenarier (vælg én ad gangen)
 #user_initial_message = "What is the current weather in Copenhagen?"
-user_initial_message = "Tell me the weather for Paris,FR"
-# user_initial_message = "How's the weather in NonExistentCityName123?" # Forventer fejl fra API'en
-# user_initial_message = "Weather for." # Forventer at LLM'en spørger om en by, eller at input validering fejler
+user_initial_message = "What is the weather in New York City?"
+#user_initial_message = "How's the weather in NonExistentCityName123?" # Forventer fejl fra API'en
+#user_initial_message = "Weather for." # Forventer at LLM'en spørger om en by, eller at input validering fejler
 
-# Start chatten
 user_proxy.initiate_chat(
-    weather_assistant, # Den nye vejr-assistent
+    weather_assistant,
     message=user_initial_message
 )
 

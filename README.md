@@ -1,119 +1,94 @@
-# Autogen AI Agent: Todo Information Retriever
+# Autogen AI Agent: Aktuel Vejrudsigt Henter
 
-This project implements an AI agent system using the Autogen framework and the Mistral `open-mistral-nemo` Large Language Model (LLM). The agent is designed to retrieve details (title and completion status) for a specific "todo" item by its ID from the public JSONPlaceholder API.
+Dette projekt implementerer et AI-agent system ved hjælp af AutoGen frameworket og Mistral's `open-mistral-nemo` Large Language Model (LLM). Agenten er designet til at hente den aktuelle vejrudsigt (temperatur og beskrivelse) for en specificeret by ved hjælp af OpenWeatherMap API'en.
 
-This project was developed as part of the Machine Learning course exam (Spring 2025).
+Dette projekt er blevet udviklet som en del af eksamensprojektet i Machine Learning (Forår 2025).
 
-## Features
+## Funktionaliteter
 
-*   **Tool Usage:** The agent utilizes a custom Python tool (`get_todo_data`) to fetch data from an external API (JSONPlaceholder).
-*   **Code Generation & Execution:** The LLM (via the `TodoAssistant` agent) generates Python code to parse the JSON response from the API. This code is then executed by the `UserProxyAgent`.
-*   **Multi-Agent Interaction:** Demonstrates a basic two-agent setup (`UserProxyAgent` and `TodoAssistant`) collaborating to solve the task.
-*   **Error Handling:** The tool and agent system include basic error handling for invalid inputs or API issues.
+*   **Ekstern API Integration:** Agenten anvender et brugerdefineret Python-værktøj (`get_current_weather`) til at hente data fra OpenWeatherMap API'en.
+*   **Brug af Værktøjer:** Demonstrerer definition og brug af et brugerdefineret værktøj inden for Autogen-frameworket.
+*   **Kodegenerering & Eksekvering:** LLM'en (via `WeatherAssistant`-agenten) genererer Python-kode til at parse JSON-svaret fra API'en. Denne kode eksekveres derefter af `UserProxyAgent`.
+*   **Multi-Agent Interaktion:** Implementerer et setup med to agenter (`UserProxyAgent` og `WeatherAssistant`), der samarbejder om at opfylde brugerens anmodning.
+*   **Fejlhåndtering:** Værktøjet og agentsystemet inkluderer logik til at håndtere ugyldige brugerinput, API-fejl (f.eks. by ikke fundet, ugyldig API-nøgle) og parsing-problemer.
+*   **Håndtering af Environment Variabler:** Sikker håndtering af API-nøgler ved hjælp af en `.env`-fil.
 
-## Project Structure
-.
-├── app.py # Main application script to run the Autogen agents
-├── tools.py # Contains the API calling tool (get_todo_data)
-├── requirements.txt # Python dependencies
-├── .env.example # Example environment file (DO NOT commit your actual .env file)
-├── README.md # This file
-├── project_description.pdf # (Or .md) Detailed project synopsis/document (1-3 pages)
-├── use_cases.md # Examples of inputs and desired outputs
-└── coding/ # Directory created by Autogen for storing/executing generated code (add to .gitignore)
+## Projektstruktur
+
+*   app.py            # til at køre Autogen-agenterne
+*   tools.py          # Indeholder API tool
+*   requirements.txt
+*   .env              # environment variabler
+*   README.md         
+*   use_cases.md      # Få use cases af hvad man kan forvente af agenten
+
+## Afhængigheder
+
+*   Python 3.10
+*   AutoGen Framework
+*   Mistral AI Client `mistralai`
+*   python-dotenv
+*   requests
+Resten ligger i requirements.txt 
+
+## Opsætningsinstruktioner
+
+1.  **Klon Repository'et:**
+
+    git clone URL
+    cd REPOSITORY
 
 
-## Dependencies
+2.  **Opret og Aktivér et Python Virtuelt Miljø:**
 
-*   Python 3.9+
-*   **Autogen Framework:** This project uses a specific version/fork of Autogen suitable for Mistral API integration (as used in prior course assignments):
-    *   `autogen-agentchat @ git+https://github.com/patrickstolc/autogen.git@0.2#egg=autogen-agentchat`
-*   **Mistral AI Client:** `mistralai==1.2.3`
-*   **Other Core Libraries:**
-    *   `python-dotenv` (for managing API keys)
-    *   `requests` (for making HTTP requests in the tool)
-    *   (Include `ollama` and `fix-busted-json` if they were part of the required stack for the Mistral setup, even if not directly used by this specific agent's logic, to match the previous assignment's environment).
-
-A full list of Python package dependencies is provided in `requirements.txt`.
-
-## Setup Instructions
-
-1.  **Clone the Repository:**
-    ```bash
-    git clone [URL_OF_YOUR_GITHUB_REPOSITORY]
-    cd [YOUR_REPOSITORY_NAME]
-    ```
-
-2.  **Create and Activate a Python Virtual Environment:**
-    (Recommended)
     ```bash
     python -m venv venv
-    # On Windows
+    # Windows
     # venv\Scripts\activate
-    # On macOS/Linux
-    # source venv/bin/activate
     ```
 
-3.  **Install Dependencies:**
+3.  **Installér Afhængigheder:**
     ```bash
     pip install -r requirements.txt
     ```
-    *Note: If you encounter issues installing `autogen-agentchat` directly via pip due to git dependencies, you might need to ensure git is installed and in your PATH, or consult any specific instructions provided for that package in your course.*
 
-4.  **Set Up Environment Variables:**
-    Create a `.env` file in the root of the project directory by copying `.env.example`:
-    ```bash
-    cp .env.example .env
-    ```
-    Open the `.env` file and add your Mistral API key:
-    ```
-    MISTRAL_API_KEY="your_actual_mistral_api_key_here"
-    ```
-    **Important:** Do NOT commit your actual `.env` file to version control. The `.gitignore` file should prevent this.
+4.  **Opsæt Environment Variabler:**
+    *   Man skal tilmelde sig og få fat i en nøgle fra mistral og OpenWeatherMap
+        MISTRAL_API_KEY=""
+        OPENWEATHERMAP_API_KEY=""
 
-## How to Run the Code
+## Sådan Kører Du Koden
 
-1.  Ensure your virtual environment is activated and all dependencies are installed.
-2.  Make sure your `MISTRAL_API_KEY` is correctly set in the `.env` file.
+1.  Sørg for, at dit virtuelle miljø er aktiveret, og alle afhængigheder er installeret.
+2.  Verificér, at dine `MISTRAL_API_KEY` og `OPENWEATHERMAP_API_KEY` er korrekt sat i `.env`-filen.
 
-3.  Execute the main application script:
+3.  Kør
     ```bash
     python app.py
     ```
 
-4.  The script will initiate a conversation between the agents. The default task is to fetch details for "todo item number 5". You can observe the agent interaction, tool usage, and code execution in the terminal output.
+4.  
+    * Scriptet vil starte en samtale mellem agenterne. I bunden af app.py kan du se de forskellige scenarier, kør kun en af gangen da den kan starte med at hallucinere.
 
-5.  **To Test Different Inputs:**
-    Modify the `user_initial_message` variable within the `app.py` script. For example:
-    ```python
-    # In app.py, find this line:
-    # user_initial_message = "Can you get me the details for todo item number 5?"
-    
-    # Change it to test other scenarios:
-    # user_initial_message = "What about todo number 1?"
-    # user_initial_message = "Fetch details for todo 0" # Test invalid input error
-    # user_initial_message = "I need info on todo 999888" # Test API 404 error
-    ```
-    Then, re-run `python app.py`.
+## Agent Design Overblik
 
-## Agent Design Overview
-
-The system consists of two main Autogen agents:
+Systemet består af to primære Autogen-agenter:
 
 1.  **`UserProxyAgent` ("UserProxy"):**
-    *   Initiates the chat with the user's request.
-    *   Executes tools (like `get_todo_data`) when requested by the `TodoAssistant`.
-    *   Executes Python code generated by the `TodoAssistant` for tasks like JSON parsing.
-    *   Does not require human input (`human_input_mode="NEVER"`).
+    *   Starter chatten med brugerens anmodning (f.eks. at spørge om vejret i en by).
+    *   Eksekverer `get_current_weather`-værktøjet, når anmodet af `WeatherAssistant` (via en wrapper-funktion, der injicerer API-nøglen).
+    *   Eksekverer Python-kode genereret af `WeatherAssistant` til opgaver som f.eks. parsing af JSON-vejrdata.
+    *   Opererer uden direkte menneskelig input under kørslen (`human_input_mode="NEVER"`).
 
-2.  **`AssistantAgent` ("TodoAssistant"):**
-    *   Powered by the Mistral `open-mistral-nemo` LLM.
-    *   Receives user requests and tool outputs.
-    *   Reasons about the task and decides when to use the `get_todo_data` tool.
-    *   Generates Python code to parse the JSON data returned by the tool.
-    *   Formulates the final response to the user.
-    *   Guided by a detailed system message outlining its workflow, tool usage, code generation strategy, and error handling.
+2.  **`AssistantAgent` ("WeatherAssistant"):**
+    *   Drevet af Mistral `open-mistral-nemo` LLM.
+    *   Modtager brugeranmodninger og værktøjsoutput.
+    *   Fortolker brugerens anmodning for at identificere bynavnet.
+    *   Beslutter, hvornår `get_current_weather_for_agent`-værktøjet skal bruges (dette er navnet defineret i det tool schema, der gives til LLM'en).
+    *   Genererer Python-kode til at parse JSON-data returneret af OpenWeatherMap API'en, specifikt for at udtrække temperatur og vejrbeskrivelse.
+    *   Formulerer det endelige svar til brugeren, hvor vejrinformationen eller eventuelle fejl præsenteres.
+    *   Styret af en detaljeret systembesked, der skitserer dens arbejdsgang: hvordan man bruger værktøjet, hvordan man parser den forventede JSON-struktur, og hvordan man håndterer fejl.
 
-The LLM configuration for the `TodoAssistant` uses `native_tool_calls: False` and defines the available tools using a schema passed to the `tools` parameter, compatible with the Autogen fork used.
+LLM-konfigurationen for `WeatherAssistant` bruger `native_tool_calls: False`. De tilgængelige værktøjer er defineret ved hjælp af et schema angivet i `tools`-parameteren i `llm_config`. Den faktiske Python-funktion (`tools.get_current_weather`) mappes via en wrapper (`get_current_weather_for_autogen_wrapper` i `app.py`) i `function_map` for at håndtere API-nøgleinjektion sikkert.
 
-*(You can briefly mention the ReAct-like flow if you discuss it in your main document).*
+*(Du kan kort nævne det ReAct-lignende (Reason-Act) flow, hvis du diskuterer det i dit hoveddokument: agenten ræsonnerer over opgaven, beslutter en handling som at kalde et værktøj eller generere kode, og behandler derefter resultatet af denne handling).*
