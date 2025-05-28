@@ -1,128 +1,148 @@
 # tools.py
 import requests
 import json
+import os
 
 # Konstanter for API URL og standard timeout
-JSONPLACEHOLDER_BASE_URL = "https://jsonplaceholder.typicode.com"
+OPENWEATHERMAP_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 DEFAULT_REQUEST_TIMEOUT = 10
+
 
 # Fetcher data til en specifik todo fra JSONPlaceholder API.
 # Returnerer raw JSON-respons som en string, hvis det lykkes.
 # Hvis der opstår problemer, returneres en JSON-streng med en 'error'-nøgle.
-def get_todo_data(todo_id: int) -> str:
-    # Log start
-    print(f"----- EXECUTING TOOL: get_todo_data (ID: {todo_id}) -----")
+def get_current_weather(city_name: str, api_key: str) -> str:
+    """
+    Fetches current weather data for a specified city using OpenWeatherMap API.
+    Returns the raw JSON response as a string if successful.
+    Returns a JSON string with an 'error' key if any issue occurs.
 
-    # 1. Input Validation
-    if not isinstance(todo_id, int) or todo_id <= 0:
-        error_message = "Invalid todo_id. Must be a positive integer."
-        print(f"----- TOOL ERROR (Input Validation): {error_message} -----")
+    Args:
+        city_name: The name of the city (e.g., "London", "Copenhagen,DK").
+        api_key: Your OpenWeatherMap API key.
+    """
+    # Log start
+    print(f"----- VÆRKTØJ KØRER: get_current_weather (By: {city_name}) -----")
+
+    if not api_key:
+        error_message = "OpenWeatherMap API key mangler."
+        print(f"----- VÆRKTØJSFEJL (Konfiguration): {error_message} -----")
+        return json.dumps({"error": "ConfigError", "message": error_message})
+
+    if not city_name or not isinstance(city_name, str):
+        error_message = "Ugyldigt bynavn. Skal være en streng og ikke tom."
+        print(f"----- VÆRKTØJSFEJL (Input Validering): {error_message} -----")
         return json.dumps({"error": "InvalidInput", "message": error_message})
 
     # Sammensæt URL til API-kald
-    url = f"{JSONPLACEHOLDER_BASE_URL}/todos/{todo_id}"
+    # units=metric for Celsius, units=imperial for Fahrenheit
+    params = {
+        "q": city_name,
+        "appid": api_key,
+        "units": "metric" # Eller 'imperial' for Fahrenheit
+    }
 
     try:
-        # 2. API Call
-        response = requests.get(url, timeout=DEFAULT_REQUEST_TIMEOUT)
-        response.raise_for_status()  # Raises HTTPError for 4xx/5xx responses
+        # Udfør API-kald
+        response = requests.get(OPENWEATHERMAP_BASE_URL, params=params, timeout=DEFAULT_REQUEST_TIMEOUT)
+        response.raise_for_status()  # Kaster HTTPError for 4xx/5xx statuskoder
 
-        # API-kald var succesfuldt (status 2xx)
-        print(f"----- TOOL: API Call Successful (Status: {response.status_code}). Validating response... -----")
+        # API-kald var succesfuldt
+        print(f"----- VÆRKTØJ: Vejrdata API-kald succesfuldt (Status: {response.status_code}). -----")
         
-        # 3. Response Validation (skal være gyldigt JSON og et dictionary)
-        try:
-            parsed_response = json.loads(response.text)
-            if not isinstance(parsed_response, dict):
-                error_message = "API response was not a JSON object as expected."
-                print(f"----- TOOL ERROR (Invalid Response Format): {error_message} Raw text: {response.text[:100]}... -----")
-                return json.dumps({"error": "InvalidResponseFormat", "message": error_message})
-            
-            # Svar valideret, returner raw JSON-string
-            print(f"----- TOOL: Response validated. Content: {response.text[:100]}... -----")
-            return response.text
+        # OpenWeatherMap returnerer altid JSON, så vi kan direkte returnere teksten
+        # Yderligere validering af JSON-struktur kan tilføjes hvis nødvendigt
+        return response.text # Returner rå JSON-streng
 
-        except json.JSONDecodeError:
-            # Fejl hvis API-svar ikke er gyldigt JSON
-            error_message = "Failed to parse API response as JSON. The response was not valid JSON."
-            print(f"----- TOOL ERROR (JSON Decode Error): {error_message} Raw text: {response.text[:200]}... -----")
-            return json.dumps({"error": "JSONDecodeError", "message": error_message})
-
-    # Håndtering af HTTP fejl (f.eks. 404 Not Found, 500 Server Error)
     except requests.exceptions.HTTPError as http_err:
-        status_code = "Unknown"
-        api_response_text_snippet = "[no response content]"
-
+        # Håndtering af HTTP fejl
+        status_code = "Ukendt"
+        error_details_from_api = ""
         if http_err.response is not None:
             status_code = http_err.response.status_code
             try:
-                api_response_text_snippet = http_err.response.text[:200] if http_err.response.text else "[empty response body]"
-            except Exception:
-                api_response_text_snippet = "[could not retrieve error response text]"
+                # OpenWeatherMap returnerer ofte en JSON fejlbesked
+                error_data = http_err.response.json()
+                error_details_from_api = error_data.get("message", http_err.response.text[:200])
+            except json.JSONDecodeError:
+                error_details_from_api = http_err.response.text[:200] if http_err.response.text else "[tomt svar]"
         
-        llm_friendly_message = f"API request failed with HTTP status {status_code}."
+        llm_venlig_besked = f"API-kald for vejrdata fejlede. Status {status_code}. Detaljer: {error_details_from_api}"
         
-        print(f"----- TOOL ERROR (HTTPError): Status {status_code}. URL: {url}. Response: {api_response_text_snippet} -----")
+        print(f"----- VÆRKTØJSFEJL (HTTPError): Status {status_code}. Detaljer: {error_details_from_api} -----")
         return json.dumps({
             "error": "APIHttpError",
-            "message": llm_friendly_message,
+            "message": llm_venlig_besked,
             "status_code": status_code,
         })
 
     except requests.exceptions.Timeout:
-        error_message = f"API request timed out after {DEFAULT_REQUEST_TIMEOUT} seconds."
-        print(f"----- TOOL ERROR (Timeout): {error_message} URL: {url} -----")
+        error_message = f"API-kald for vejrdata timede ud efter {DEFAULT_REQUEST_TIMEOUT} sekunder."
+        print(f"----- VÆRKTØJSFEJL (Timeout): {error_message} -----")
         return json.dumps({"error": "APITimeoutError", "message": error_message})
 
     except requests.exceptions.ConnectionError:
-        error_message = "Failed to connect to the API. Check network or API server."
-        print(f"----- TOOL ERROR (ConnectionError): {error_message} URL: {url} -----")
+        error_message = "Kunne ikke forbinde til OpenWeatherMap API'et."
+        print(f"----- VÆRKTØJSFEJL (ConnectionError): {error_message} -----")
         return json.dumps({"error": "APIConnectionError", "message": error_message})
 
-    except requests.exceptions.RequestException as req_err: # Catch other requests-related errors
-        error_message = f"An unexpected API request error occurred: {str(req_err)}"
-        print(f"----- TOOL ERROR (RequestException): {error_message} URL: {url} -----")
+    except requests.exceptions.RequestException as req_err:
+        error_message = f"En uventet API-forespørgselsfejl opstod: {str(req_err)}"
+        print(f"----- VÆRKTØJSFEJL (RequestException): {error_message} -----")
         return json.dumps({"error": "APIRequestError", "message": error_message})
 
-    except Exception as e: # Catch any other unexpected errors within the tool
-        error_message = f"An unexpected internal error occurred in the tool: {str(e)}"
-        print(f"----- TOOL ERROR (InternalToolError): {error_message} -----")
+    except Exception as e:
+        error_message = f"En uventet intern fejl opstod i værktøjet: {str(e)}"
+        print(f"----- VÆRKTØJSFEJL (InternalToolError): {error_message} -----")
         return json.dumps({"error": "InternalToolError", "message": error_message})
 
-# Test script til direkte kørsel af tools.py
-def _test_and_print_todo_data(todo_id, description):
-    print(f"--- Test Case: {description} (Todo ID: {todo_id}) ---")
-    data_string = get_todo_data(todo_id)
-    print(f"Raw output from tool: {data_string}")
+# --- Test script til direkte kørsel af tools.py ---
+def _test_and_print_weather_data(city: str, api_key_for_test: str, description: str):
+    """Hjælpefunktion til at køre en test case for vejrdata og printe resultatet."""
+    print(f"--- Test Case: {description} (By: {city}) ---")
+    data_string = get_current_weather(city, api_key_for_test)
+    print(f"Rå output fra vejr-værktøj: {data_string[:500]}...") # Print kun starten af outputtet
+    
     try:
         parsed_data = json.loads(data_string)
-        if "error" in parsed_data:
-            print(f"Tool returned error: {parsed_data.get('message')} (Type: {parsed_data.get('error')}, Status: {parsed_data.get('status_code')})")
-        else:
-            title = parsed_data.get('title', 'N/A')
-            completed = parsed_data.get('completed', 'N/A')
-            print(f"Successfully fetched: Title='{title}', Completed={completed}")
+        if "error" in parsed_data: # Værktøjet returnerede en struktureret fejl
+            print(f"Værktøj returnerede fejl: {parsed_data.get('message')} (Type: {parsed_data.get('error')})")
+        elif "cod" in parsed_data and str(parsed_data.get("cod")) != "200": # API'en selv returnerede en fejl (f.eks. by ikke fundet)
+            print(f"API fejl: {parsed_data.get('message')} (Kode: {parsed_data.get('cod')})")
+        else: # Forventet succes
+            temp = parsed_data.get("main", {}).get("temp")
+            desc = parsed_data.get("weather", [{}])[0].get("description")
+            print(f"Succesfuldt hentet: Temperatur={temp}°C, Beskrivelse='{desc}'")
     except json.JSONDecodeError:
-        print("Critical Error: Output from tool was not valid JSON, even for an error message.")
+        print("KRITISK FEJL: Output fra værktøj var ikke gyldig JSON.")
     print("-" * 40 + "\n")
 
 
 if __name__ == "__main__":
-    print("Starting direct test of get_todo_data tool...\n")
+    # Importer load_dotenv specifikt til direkte testkørsel
+    from dotenv import load_dotenv
+    load_dotenv() 
+    
+    # Hent API-nøglen fra .env
+    test_api_key_from_env = os.getenv("OPENWEATHERMAP_API_KEY")
 
-    test_cases = [
-        {"id": 1, "desc": "Successful Call (Existing Todo)"},
-        {"id": 5, "desc": "Successful Call (Another Existing Todo)"},
-        {"id": 99999, "desc": "Non-existent Todo ID (Expect APIHttpError 404)"},
-        {"id": 0, "desc": "Invalid Input (ID 0 - Expect InvalidInput Error)"},
-        {"id": -5, "desc": "Invalid Input (Negative ID - Expect InvalidInput Error)"},
-        # {"id": "abc", "desc": "Invalid Input (String ID)"}
-    ]
+    if not test_api_key_from_env:
+        print("ADVARSEL: OPENWEATHERMAP_API_KEY ikke fundet i .env filen.")
+        print("Sørg for, at .env filen eksisterer i samme mappe som tools.py (eller projektets rodmappe)")
+        print("og indeholder linjen: OPENWEATHERMAP_API_KEY='din_api_nøgle_her'")
+        print("Kan ikke køre tests for get_current_weather uden API-nøgle.")
+    else:
+        print("Starter direkte test af get_current_weather værktøjet...\n")
+        test_cities = [
+            {"city": "London", "desc": "Succesfuldt kald (London)"},
+            {"city": "Copenhagen,DK", "desc": "Succesfuldt kald (København med landekode)"},
+            {"city": "NonExistentCityName123", "desc": "By ikke fundet (Forventer API-fejl 404 'city not found')"},
+            {"city": "", "desc": "Tomt bynavn (Forventer værktøjsfejl 'InvalidInput')"},
+        ]
 
-    for case in test_cases:
-        _test_and_print_todo_data(case["id"], case["desc"])
+        for test_case in test_cities:
+            # Send den hentede API-nøgle med til testfunktionen
+            _test_and_print_weather_data(test_case["city"], test_api_key_from_env, test_case["desc"])
 
-    # Test nogle andre ugyldige input
-    print("--- Test Case: Invalid Input Type (String 'abc') ---")
-    data_string_abc = get_todo_data("abc") # type: ignore # Suppress type checker warning for this test
-    print(f"Raw output from tool for 'abc': {data_string_abc}")
+        # Test med en tom streng som API-nøgle for at tjekke validering i selve get_current_weather
+        _test_and_print_weather_data("Paris", "", "Manglende API-nøgle i kald (tom streng)")
