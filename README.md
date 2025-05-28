@@ -74,11 +74,11 @@ Resten ligger i requirements.txt
 
 Systemet består af to primære Autogen-agenter:
 
-1.  **`UserProxyAgent` ("UserProxy"):**
+1.  **`UserProxyAgent`
     *   Starter chatten med brugerens anmodning (f.eks. at spørge om vejret i en by).
-    *   Eksekverer `get_current_weather`-værktøjet, når anmodet af `WeatherAssistant` (via en wrapper-funktion, der injicerer API-nøglen).
-    *   Eksekverer Python-kode genereret af `WeatherAssistant` til opgaver som f.eks. parsing af JSON-vejrdata.
-    *   Opererer uden direkte menneskelig input under kørslen (`human_input_mode="NEVER"`).
+    *   Executer `get_current_weather`-værktøjet, når anmodet af `WeatherAssistant`
+    *   Executer Python-kode genereret af `WeatherAssistant` til opgaver som f.eks. parsing af JSON-vejrdata.
+    *   Opererer uden direkte input under kørslen (`human_input_mode="NEVER"`).
 
 2.  **`AssistantAgent` ("WeatherAssistant"):**
     *   Drevet af Mistral `open-mistral-nemo` LLM.
@@ -87,8 +87,4 @@ Systemet består af to primære Autogen-agenter:
     *   Beslutter, hvornår `get_current_weather_for_agent`-værktøjet skal bruges (dette er navnet defineret i det tool schema, der gives til LLM'en).
     *   Genererer Python-kode til at parse JSON-data returneret af OpenWeatherMap API'en, specifikt for at udtrække temperatur og vejrbeskrivelse.
     *   Formulerer det endelige svar til brugeren, hvor vejrinformationen eller eventuelle fejl præsenteres.
-    *   Styret af en detaljeret systembesked, der skitserer dens arbejdsgang: hvordan man bruger værktøjet, hvordan man parser den forventede JSON-struktur, og hvordan man håndterer fejl.
-
-LLM-konfigurationen for `WeatherAssistant` bruger `native_tool_calls: False`. De tilgængelige værktøjer er defineret ved hjælp af et schema angivet i `tools`-parameteren i `llm_config`. Den faktiske Python-funktion (`tools.get_current_weather`) mappes via en wrapper (`get_current_weather_for_autogen_wrapper` i `app.py`) i `function_map` for at håndtere API-nøgleinjektion sikkert.
-
-*(Du kan kort nævne det ReAct-lignende (Reason-Act) flow, hvis du diskuterer det i dit hoveddokument: agenten ræsonnerer over opgaven, beslutter en handling som at kalde et værktøj eller generere kode, og behandler derefter resultatet af denne handling).*
+    *   Har en system_message/prompt den følger
