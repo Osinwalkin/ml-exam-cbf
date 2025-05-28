@@ -53,6 +53,7 @@ Resten ligger i requirements.txt
     ```
 
 4.  **Opsæt Environment Variabler:**
+    *   Lav en .env fil
     *   Man skal tilmelde sig og få fat i en nøgle fra mistral og OpenWeatherMap
         MISTRAL_API_KEY=""
         OPENWEATHERMAP_API_KEY=""
